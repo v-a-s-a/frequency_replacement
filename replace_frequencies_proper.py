@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 """
-A formal frequency replacement program.
+A frequency replacement program for DANER files.
 """
 
 import gzip
@@ -77,10 +77,13 @@ class Daner:
 
         with smart_open(self.daner_file) as fconn:
             self.header = next(fconn).decode("utf-8").strip()
-            self.header_index = {field: index for index, field in enumerate(self.header.split())}
+            self.header_index = {field: index for index,
+                                 field in enumerate(self.header.split())}
 
-        ncase_header = next(filter(lambda x: x.startswith("FRQ_A_"), self.header.split()))
-        ncontrol_header = next(filter(lambda x: x.startswith("FRQ_U_"), self.header.split()))
+        ncase_header = next(
+            filter(lambda x: x.startswith("FRQ_A_"), self.header.split()))
+        ncontrol_header = next(
+            filter(lambda x: x.startswith("FRQ_U_"), self.header.split()))
         self.n_case = ncase_header.lstrip("FRQ_A_")
         self.n_control = ncontrol_header.lstrip("FRQ_U_")
 
@@ -111,8 +114,10 @@ class Daner:
             if frequency:
                 self.frequency_differences.add(
                     float(self.header_index["FRQ_U_" + self.n_control]) - float(frequency))
-                row[self.header_index["FRQ_A_{}".format(self.n_case)]] = frequency
-                row[self.header_index["FRQ_U_{}".format(self.n_control)]] = frequency
+                row[self.header_index[
+                    "FRQ_A_{}".format(self.n_case)]] = frequency
+                row[self.header_index["FRQ_U_{}".format(
+                    self.n_control)]] = frequency
                 row = '\t'.join(row[:self.keep_until_column])
             else:
                 self.variants_not_in_reference.append('\t'.join(row))
@@ -164,12 +169,16 @@ class Reference:
 
 def __main__():
 
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--out", action="store", dest="out_daner")
-    parser.add_argument("--readme-file", action="store", dest="out_readme")
+    parser = argparse.ArgumentParser(
+        description="Replacing frequencies from a DANER file given a reference.")
+    parser.add_argument("--out", action="store", dest="out_daner",
+                        help="Output location of the resulting gzipped file.")
+    parser.add_argument("--readme-file", action="store", dest="out_readme",
+                        help="Output location of the accompanying README file.")
     parser.add_argument("--references", action="store", nargs='+',
-                        dest="references")
-    parser.add_argument("--daner", action="store", dest="daner")
+                        dest="references", help="List of reference file locations used to replace frequencies.")
+    parser.add_argument("--daner", action="store", dest="daner",
+                        help="Location of gzipped DANER file to replace frequencies in.")
     args = parser.parse_args()
 
     # Generate a README for this replacement
@@ -177,17 +186,25 @@ def __main__():
 # {{DATASET NAME}} Public Release
 
 ## Pre-release Filters
-In addition to study level and meta-analysis quality control, we apply a final variant filter. This currently consists of:
+In addition to study level and meta-analysis quality control, we apply a final
+variant filter. This currently consists of:
   - Remove variants that are missing in two or more studies.
 
 ## Frequency Replacement
-Allele frequency estimates from the study are replaced with estimates from {{AUTOSOMAL REFERENCE NAME}} and {{CHR23 REFERENCE NAME}} to reduce the ability for a third party to reidentify study participants.
+Allele frequency estimates from the study are replaced with estimates from
+{{AUTOSOMAL REFERENCE NAME}} and {{CHR23 REFERENCE NAME}} to reduce the ability
+ for a third party to reidentify study participants.
 The frequency replacement proceeds as follows:
-  1. Load reference European frequencies from {{AUTOSOMAL REFERENCE NAME}} for autosomal variants.
-  2. Load reference European frequencies from {{CHR23 REFERENCE NAME}} release for chr23 variants.
-  3. Merge reference and study variants on variant ID, chromosome and physical position.
-  4. Invert reference allele frequencies if the reference allele codes are flipped.
-  5. Leave variant allele frequencies that are not found in the reference (a very small proportion of variants).
+  1. Load reference European frequencies from {{AUTOSOMAL REFERENCE NAME}} for
+        autosomal variants.
+  2. Load reference European frequencies from {{CHR23 REFERENCE NAME}} release
+        for chr23 variants.
+  3. Merge reference and study variants on variant ID, chromosome and physical
+        position.
+  4. Invert reference allele frequencies if the reference allele codes are
+        flipped.
+  5. Leave variant allele frequencies that are not found in the reference (a
+        very small proportion of variants).
   6. Set both case and control frequency estimates to the same value.
 
 ## Misc.
@@ -234,7 +251,7 @@ Summary:
     {var_in_references} variants in all references.
     {var_not_found} variants not found in references.
 
-    {extreme_freq_diffs} variants with >10\% change in frequency.
+    {extreme_freq_diffs} variants with >10% change in frequency.
     """
 
     print(summary_message.format(
